@@ -97,6 +97,11 @@ impl<T> EmtuxVec<T> {
         self.vec.extend(iter.map(|x| Mutex::new(x)))
     }
 
+
+    /// Create a view of this vector. This view will give you mutable access to the elements that will not cause deadlocks so long as the following conditions are met.
+    /// - You do not use the view on the same thread as this `EmtuxVec`
+    /// - You do not pass more than one view to the thread
+    /// - You do not access other locked resources whilst accessing the view
     pub fn get_view(&self) -> EmtuxVecView<'_, T> {
         EmtuxVecView { vec: &self.vec }
     }
@@ -181,6 +186,7 @@ impl<'a, T> EmtuxVecView<'a, T> {
     }
 
     /// COUNT must be at most 34
+    ///
     pub fn get_many<const COUNT: usize>(
         &mut self,
         indices: [usize; COUNT],
