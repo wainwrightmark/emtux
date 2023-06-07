@@ -24,12 +24,12 @@ fn test_get() {
 fn test_vec_functions() {
     let mut vec: EmtuxVec<usize> = vec::EmtuxVec::from_iter([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
-    assert_eq!(vec.is_empty(), false);
+    assert!(!vec.is_empty());
     assert_eq!(vec.len(), 10);
     vec.push(10);
     assert_eq!(vec.len(), 11);
     vec.clear();
-    assert_eq!(vec.is_empty(), true);
+    assert!(vec.is_empty());
     assert_eq!(vec.len(), 0);
 }
 
@@ -55,7 +55,7 @@ fn test_poison() {
 
         *_a = 1;
 
-        ()
+        
     });
 
     swaps1.join().expect_err("Thread should have panicked");
@@ -120,7 +120,7 @@ fn test_concurrency() {
             swap_values(&mut view_a, &mut rng, "Thread 1", &sender1);
         }
         drop(sender1);
-        ()
+        
     });
 
     let swaps2 = thread::spawn(move || {
@@ -129,7 +129,7 @@ fn test_concurrency() {
             swap_values(&mut view_b, &mut rng, "Thread 2", &sender2)
         }
         drop(sender2);
-        ()
+        
     });
 
     drop(sender);
@@ -141,7 +141,7 @@ fn test_concurrency() {
         println!("{}", message)
     }
 
-    let mut results: Vec<_> = vec.iter().map(|x| x.unwrap().clone()).collect();
+    let mut results: Vec<_> = vec.iter().map(|x| *x.unwrap()).collect();
 
     let results_string = results
         .iter()
@@ -191,7 +191,5 @@ fn swap_values<'a, R: Rng>(
         ))
         .expect("Could not send");
 
-    let swap = *mg0;
-    *mg0 = *mg1;
-    *mg1 = swap;
+    std::mem::swap(&mut (*mg0), &mut (*mg1));
 }

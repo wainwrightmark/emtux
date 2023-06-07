@@ -97,7 +97,7 @@ impl<T> EmtuxVec<T> {
         self.vec.extend(iter.map(|x| Mutex::new(x)))
     }
 
-    pub fn get_view<'a>(self: &'a Self) -> EmtuxVecView<'a, T> {
+    pub fn get_view(&self) -> EmtuxVecView<'_, T> {
         EmtuxVecView { vec: &self.vec }
     }
 
@@ -105,11 +105,11 @@ impl<T> EmtuxVec<T> {
         self.vec.len()
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = LockResult<MutexGuard<'a, T>>> {
+    pub fn iter(&self) -> impl Iterator<Item = LockResult<MutexGuard<'_, T>>> {
         self.into_iter()
     }
 
-    pub fn get<'b>(&'b self, index: usize) -> EmtuxVecResult<MutexGuard<T>> {
+    pub fn get(&self, index: usize) -> EmtuxVecResult<MutexGuard<T>> {
         match self.vec.get(index) {
             Some(x) => convert_result(x.lock()),
             None => Err(EmtuxVecError::IndexOutsideBounds),
@@ -137,8 +137,8 @@ pub struct EmtuxVecView<'a, T> {
     vec: &'a Vec<Mutex<T>>,
 }
 
-fn get_many<'b, T, const COUNT: usize>(
-    vec: &'b Vec<Mutex<T>>,
+fn get_many<T, const COUNT: usize>(
+    vec: &Vec<Mutex<T>>,
     indices: [usize; COUNT],
 ) -> [EmtuxVecResult<MutexGuard<T>>; COUNT] {
     debug_assert!(COUNT <= 34);
@@ -152,7 +152,7 @@ fn get_many<'b, T, const COUNT: usize>(
     for i in 0..indices.len() {
         let indices_index = permutation.index_of(&i, |x| *x as u8) as usize;
 
-        let vec_index = indices[indices_index as usize];
+        let vec_index = indices[indices_index];
 
         if Some(vec_index) == last_index {
             results[indices_index] = Err(EmtuxVecError::DuplicateIndex);
@@ -160,7 +160,7 @@ fn get_many<'b, T, const COUNT: usize>(
         }
         last_index = Some(vec_index);
 
-        match vec.get(vec_index as usize) {
+        match vec.get(vec_index) {
             Some(mutex) => {
                 let r = mutex.lock();
                 results[indices_index] = convert_result(r);
@@ -173,7 +173,7 @@ fn get_many<'b, T, const COUNT: usize>(
 }
 
 impl<'a, T> EmtuxVecView<'a, T> {
-    pub fn get<'b>(&'b mut self, index: usize) -> EmtuxVecResult<MutexGuard<T>> {
+    pub fn get(&mut self, index: usize) -> EmtuxVecResult<MutexGuard<T>> {
         match self.vec.get(index) {
             Some(x) => convert_result(x.lock()),
             None => Err(EmtuxVecError::IndexOutsideBounds),
@@ -181,11 +181,11 @@ impl<'a, T> EmtuxVecView<'a, T> {
     }
 
     /// COUNT must be at most 34
-    pub fn get_many<'b, const COUNT: usize>(
-        &'b mut self,
+    pub fn get_many<const COUNT: usize>(
+        &mut self,
         indices: [usize; COUNT],
     ) -> [EmtuxVecResult<MutexGuard<T>>; COUNT] {
-        get_many(&self.vec, indices)
+        get_many(self.vec, indices)
     }
 
     pub fn len(&self) -> usize {
