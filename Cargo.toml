@@ -1,0 +1,14 @@
+[package]
+name = "emtux"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+
+importunate = "0.1.1"
+thiserror = "1.0.40"
+
+
+[dev-dependencies]
+rand = "0.8.5"
