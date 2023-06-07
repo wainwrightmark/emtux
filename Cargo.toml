@@ -2,7 +2,13 @@
 name = "emtux"
 version = "0.1.0"
 edition = "2021"
-
+authors = ["Mark Wainwright <wainwrightml@gmail.com>"]
+repository = "https://github.com/wainwrightmark/emtux"
+readme = "README.md"
+keywords = ["collections", "deadlock", "concurrency", "mutable", "async"]
+categories = [
+]
+license = "MIT"
 
 [dependencies]
 
